@@ -34,8 +34,16 @@ fn echo_path() {
   print_output(String::from("Echo path with reference"), &output);
 }
 
+fn exec_in_another_dir() {
+  let output = Command::new("ls")
+    .current_dir("/home/snape")
+    .output()
+    .unwrap();
+  print_output(String::from("Exec in other path"), &output);
+}
+
 fn main() {
   git_status();
-
   echo_path();
+  exec_in_another_dir()
 }
