@@ -16,17 +16,17 @@ fn print_output(title: String, o: &Output) {
 }
 
 fn git_status() {
-  let mut command = Command::new("sh");
-  command.args(["-c", "git status --short"]);
-  let output = command.output().expect("faield to execute command");
+  let mut cmd = Command::new("sh");
+  cmd.args(["-c", "git status --short"]);
+  let output = cmd.output().expect("faield to execute cmd");
 
   print_output(String::from("Git Status"), &output);
 }
 
 fn echo_path() {
-  let mut command = Command::new("sh");
-  command.args(["-c", "echo $HOME/workspace"]);
-  let mut output = command.output().expect("failed to execute command");
+  let mut cmd = Command::new("sh");
+  cmd.args(["-c", "echo $HOME/workspace"]);
+  let mut output = cmd.output().expect("failed to execute cmd");
   output
     .stdout
     .resize(output.stdout.len() - 1, output.stdout[0]);
@@ -42,8 +42,23 @@ fn exec_in_another_dir() {
   print_output(String::from("Exec in other path"), &output);
 }
 
+fn exec_in_two_cmds() {
+  let ls_cmd = Command::new("ls").stdout(Stdio::piped()).spawn().unwrap();
+
+  let grep_cmd = Command::new("grep")
+    .args([".rs", "--color"])
+    .stdin(Stdio::from(ls_cmd.stdout.unwrap()))
+    .stdout(Stdio::piped())
+    .spawn()
+    .unwrap();
+
+  let output = grep_cmd.wait_with_output().unwrap();
+  print_output(String::from("Cd and exec using chield"), &output);
+}
+
 fn main() {
   git_status();
   echo_path();
-  exec_in_another_dir()
+  exec_in_another_dir();
+  exec_in_two_cmds();
 }
