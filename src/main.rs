@@ -53,7 +53,28 @@ fn exec_in_two_cmds() {
     .unwrap();
 
   let output = grep_cmd.wait_with_output().unwrap();
-  print_output(String::from("Cd and exec using chield"), &output);
+  print_output(String::from("Cd and exec using child"), &output);
+}
+
+fn exec_status_evaluated_path() {
+  let mut path_cmd_out = Command::new("sh")
+    .args(["-c", "echo $HOME/test-dir"])
+    .stdout(Stdio::piped())
+    .spawn()
+    .unwrap()
+    .wait_with_output()
+    .unwrap();
+  path_cmd_out
+    .stdout
+    .resize(path_cmd_out.stdout.len() - 1, path_cmd_out.stdout[0]);
+  let path = str::from_utf8(&path_cmd_out.stdout).expect("failed to parse output");
+  println!("{}", path);
+
+  let output = Command::new("ls")
+    .current_dir("/home/snape/test-dir")
+    .output()
+    .unwrap();
+  print_output(String::from("Exec status in evaluated path"), &output);
 }
 
 fn main() {
@@ -61,4 +82,5 @@ fn main() {
   echo_path();
   exec_in_another_dir();
   exec_in_two_cmds();
+  exec_status_evaluated_path();
 }
