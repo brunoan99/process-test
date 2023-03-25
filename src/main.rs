@@ -17,7 +17,7 @@ fn print_output(title: String, o: &Output) {
 
 fn git_status() {
   let mut cmd = Command::new("sh");
-  cmd.args(["-c", "git status --short"]);
+  cmd.args(["-c", "/bin/git status --short"]);
   let output = cmd.output().expect("faield to execute cmd");
 
   print_output(String::from("Git Status"), &output);
@@ -25,7 +25,7 @@ fn git_status() {
 
 fn echo_path() {
   let mut cmd = Command::new("sh");
-  cmd.args(["-c", "echo $HOME/workspace"]);
+  cmd.args(["-c", "/bin/echo $HOME/workspace"]);
   let mut output = cmd.output().expect("failed to execute cmd");
   output
     .stdout
@@ -56,7 +56,7 @@ fn exec_in_two_cmds() {
   print_output(String::from("Cd and exec using child"), &output);
 }
 
-fn exec_status_evaluated_path() {
+fn exec_in_evaluated_path() {
   let mut path_cmd_out = Command::new("sh")
     .args(["-c", "echo $HOME/test-dir"])
     .stdout(Stdio::piped())
@@ -77,10 +77,35 @@ fn exec_status_evaluated_path() {
   print_output(String::from("Exec status in evaluated path"), &output);
 }
 
+fn git_status_evaluated_path() {
+  let mut path_cmd_out = Command::new("sh")
+    .arg("-c")
+    .arg("/bin/echo $HOME/test-dir")
+    .stdout(Stdio::piped())
+    .spawn()
+    .unwrap()
+    .wait_with_output()
+    .unwrap();
+  path_cmd_out
+    .stdout
+    .resize(path_cmd_out.stdout.len() - 1, path_cmd_out.stdout[0]);
+  let path = str::from_utf8(&path_cmd_out.stdout).expect("failed to parse output");
+  println!("{}", path);
+
+  let output = Command::new("/bin/git")
+    .arg("status")
+    .arg("--short")
+    .current_dir(path)
+    .output()
+    .unwrap();
+  print_output(String::from("Exec status in evaluated path"), &output);
+}
+
 fn main() {
   git_status();
   echo_path();
   exec_in_another_dir();
   exec_in_two_cmds();
-  exec_status_evaluated_path();
+  exec_in_evaluated_path();
+  git_status_evaluated_path();
 }
