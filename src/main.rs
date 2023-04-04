@@ -112,6 +112,38 @@ fn git_log() {
   print_output("Git Log", &output);
 }
 
+fn git_get_remotes() {
+  let mut path_cmd_out = Command::new("sh")
+    .arg("-c")
+    .arg("/bin/echo $PWD")
+    .stdout(Stdio::piped())
+    .spawn()
+    .unwrap()
+    .wait_with_output()
+    .unwrap();
+  path_cmd_out
+    .stdout
+    .resize(path_cmd_out.stdout.len() - 1, path_cmd_out.stdout[0]);
+  let path = str::from_utf8(&path_cmd_out.stdout).expect("failed to parse output");
+
+  let mut output = Command::new("/bin/ls")
+    .args(["./.git/refs/remotes"])
+    .current_dir(path)
+    .output()
+    .expect("failed to execute cmd");
+  print_output("Git Remotes", &output);
+
+  output
+    .stdout
+    .resize(output.stdout.len() - 1, output.stdout[0]);
+
+  let remotes: Vec<&str> = str::from_utf8(&output.stdout)
+    .expect("failed to parse output")
+    .split("\n")
+    .collect();
+  println!("remotes: {:#?}", remotes);
+}
+
 fn main() {
   git_status();
   echo_path();
@@ -121,4 +153,5 @@ fn main() {
   git_status_evaluated_path();
   git_status_other_path();
   git_log();
+  git_get_remotes()
 }
